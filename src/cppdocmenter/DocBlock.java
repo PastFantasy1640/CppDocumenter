@@ -49,6 +49,10 @@ public class DocBlock {
 	public void addHeader(String header){
 		this.header = CppDocmenter.htmlspecialchars(header);
 	}
+        
+        public String getHeader(){
+                return this.header;
+        }
 	
 	public void parse(){
 		for(String line : blocks){

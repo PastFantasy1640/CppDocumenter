@@ -21,14 +21,15 @@ public class CppDocmenter {
 		
 		//引数が正しいか
 		if(args.length != 2){
-			System.out.println("CppDocumenter usage : CppDocumenter [fromdir] [todir]");
+			System.out.println("CppDocumenter usage : CppDocumenter [htmlfile] [fromdir] [todir]");
 			System.exit(-1);
 			return;
 		}
 		
 		//指定されたディレクトリが有るか
-		File from_dir = new File(args[0]);
-		File to_dir = new File(args[1]);
+		File html_file = new File(args[0]);
+		File from_dir = new File(args[1]);
+		File to_dir = new File(args[2]);
 		if(!(from_dir.exists() && from_dir.isDirectory())){
 			//from_dirが存在しない
 			System.err.println("from_dir is not directory.");
@@ -39,9 +40,14 @@ public class CppDocmenter {
 			System.err.println("to_dir is not directory.");
 			System.exit(-1);
 		}
+                if(!(html_file.exists() && html_file.isFile())){
+                        //htmlファイルが存在しないかファイルではない
+                        System.err.println("html file is not exist.");
+                        System.exit(-1);
+                }
 		
 		//ファイルの再帰探索とファイル生成
-		Process(from_dir, to_dir);
+		Process(html_file, from_dir, to_dir);
 		
 	}
 	
@@ -50,7 +56,7 @@ public class CppDocmenter {
 	 * @param from_dir 探索するディレクトリ
 	 * @param to_dir 保存先のディレクトリ。存在しない場合もありうる。その時は作成する。
 	 */
-	static void Process(File from_dir, File to_dir){
+	static void Process(File html_file, File from_dir, File to_dir){
 		if(!(from_dir.exists() && from_dir.isDirectory())) return;	//存在しない
 		
 		File[] files = from_dir.listFiles();
@@ -59,7 +65,7 @@ public class CppDocmenter {
 				//再帰的に下に潜る
 				try{
 					System.out.println("[directory]" + new File(to_dir.getCanonicalPath() + "/" + f.getName()).getAbsolutePath());
-					Process(f, new File(to_dir.getCanonicalPath() + "/" + f.getName()));
+					Process(html_file ,f, new File(to_dir.getCanonicalPath() + "/" + f.getName()));
 				}catch(IOException e){
 					System.err.println(e.toString());
 					System.err.println("ディレクトリはスキップされました。");
@@ -67,7 +73,7 @@ public class CppDocmenter {
 				}
 			}else if(f.isFile()){
 				//処理する
-				DocConverter.conv(f, to_dir);
+				DocConverter.conv(html_file ,f, to_dir);
 			}
 		}
 	}

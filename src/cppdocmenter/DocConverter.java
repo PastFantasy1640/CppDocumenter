@@ -5,7 +5,13 @@
  */
 package cppdocmenter;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,15 +22,50 @@ import java.util.List;
  * @author white
  */
 public class DocConverter {
-	public static void conv(File f, File t){
-		
-	}
+        /**
+         * 実際にファイルに変換して落とす関数
+         * @param origin もとになるhtmlファイル
+         * @param f 変換前のヘッダファイル
+         * @param t 変換後の保存先
+         */
+	public static void conv(File origin, File f, File t){
+		//ファイルの読み込み
+                //origin
+                try{
+                        BufferedReader src =  new BufferedReader(new FileReader(f));
+                        //parse
+                        List<DocBlock> block = DocConverter.parse(src);
+                        String title = "[untitled]";
+                        if(block.size() > 0) title = block.get(0).getHeader();
+                        
+                        BufferedReader br = new BufferedReader(new FileReader(origin));
+                        PrintWriter pw = new PrintWriter(new FileWriter(t));
+                        String line;
+                        while((line = br.readLine()) != null){
+                                line = line.replaceAll("%TITLE%", title);
+                                if(line.contains("%CONTENT%")){
+                                        //ここに本体
+                                        for(DocBlock b : block){
+                                                b.getHTML(pw);
+                                        }
+                                }else{
+                                        pw.println(line);
+                                }
+                        }
+                        
+                        br.close();
+                        src.close();
+                        pw.close();
+                }catch(FileNotFoundException e){
+                    e.printStackTrace();
+                }catch(IOException e){
+                    e.printStackTrace();
+                }
+        }
 
-	static void parse(String src){
+	static List<DocBlock> parse(BufferedReader lines) throws IOException{
 		//改行分離
-		String[] lines = src.split("\r\n");
-		for(String l : lines) l = l.trim();
-		
+                
 		//ブロックごとに分離	
 		String accessibility = "private";
 		boolean block_nextline = false;
@@ -32,7 +73,9 @@ public class DocConverter {
 		List<DocBlock> block = new ArrayList<>();
 		DocBlock now_block = null;
 		
-		for(String line : lines){
+                String line;
+		while((line = lines.readLine()) != null){
+                        line = line.trim();
 			if(line.isEmpty()) continue;
 			if(line.substring(0, 8).equals("private:")) accessibility = "private";
 			else if(line.length() >= 7 && line.substring(0, 7).equals("public:")) accessibility = "public";
@@ -69,7 +112,7 @@ public class DocConverter {
 		//並び替え
 		//$block = _sort_block($block);
 
-		//return $block;
+		return block;
 	}
 
 }
