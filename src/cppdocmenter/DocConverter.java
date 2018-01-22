@@ -36,10 +36,11 @@ public class DocConverter {
                         //parse
                         List<DocBlock> block = DocConverter.parse(src);
                         String title = "[untitled]";
-                        if(block.size() > 0) title = block.get(0).getHeader();
+                        if(block.size() > 0 && block.get(0).getHeader() != null) title = block.get(0).getHeader();
                         
                         BufferedReader br = new BufferedReader(new FileReader(origin));
-                        PrintWriter pw = new PrintWriter(new FileWriter(t));
+						if(!t.exists() || !t.isFile()) t.mkdir();
+                        PrintWriter pw = new PrintWriter(new FileWriter(new File(t.getCanonicalPath() + "/" + f.getName().replace('.', '_') + ".html")));
                         String line;
                         while((line = br.readLine()) != null){
                                 line = line.replaceAll("%TITLE%", title);
@@ -75,22 +76,24 @@ public class DocConverter {
 		
                 String line;
 		while((line = lines.readLine()) != null){
-                        line = line.trim();
+            line = line.trim();
 			if(line.isEmpty()) continue;
-			if(line.substring(0, 8).equals("private:")) accessibility = "private";
+			if(line.length() >= 8 && line.substring(0, 8).equals("private:")) accessibility = "private";
 			else if(line.length() >= 7 && line.substring(0, 7).equals("public:")) accessibility = "public";
 			else if(line.length() >= 10 && line.substring(0, 10).equals("protected:")) accessibility = "protected";
 			else if(line.length() >= 3 && line.substring(0, 3).equals("/**")) block_open = true;
 			else if(line.length() >= 2 && line.substring(0, 2).equals("*/")) {
 				block_open = false;
-				block_nextline = false;
+				block_nextline = true;
 			}else if(block_nextline) {
 			
-				if(line.endsWith("{")) line = line.substring(line.length() - 1);
-				String obj = line.replaceAll(";", "");
-				
-				block_nextline = false;			
-				if(!obj.isEmpty() && now_block != null) block.add(now_block);
+				if(line.endsWith("{")) line = line.substring(0, line.length() - 1);
+				block_nextline = false;		
+				String obj = line.replaceAll(";", "");	
+				if(now_block != null){
+					now_block.addHeader(obj);
+					block.add(now_block);
+				}
 				now_block = null;
 			}
 		
@@ -107,6 +110,7 @@ public class DocConverter {
 		}
 		
 		//意味づけ
+		System.out.println("Size" + block.size());
 		for(DocBlock d : block) d.parse();
 		
 		//並び替え

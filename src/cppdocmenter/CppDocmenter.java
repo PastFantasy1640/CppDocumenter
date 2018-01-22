@@ -20,7 +20,7 @@ public class CppDocmenter {
 	public static void main(String[] args) {
 		
 		//引数が正しいか
-		if(args.length != 2){
+		if(args.length != 3){
 			System.out.println("CppDocumenter usage : CppDocumenter [htmlfile] [fromdir] [todir]");
 			System.exit(-1);
 			return;
