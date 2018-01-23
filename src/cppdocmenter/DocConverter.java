@@ -7,10 +7,14 @@ package cppdocmenter;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,22 +36,24 @@ public class DocConverter {
 		//ファイルの読み込み
                 //origin
                 try{
-                        BufferedReader src =  new BufferedReader(new FileReader(f));
+                        BufferedReader src =  new BufferedReader(new InputStreamReader(new FileInputStream(f), "Shift-JIS"));
                         //parse
                         List<DocBlock> block = DocConverter.parse(src);
                         String title = "[untitled]";
                         if(block.size() > 0 && block.get(0).getHeader() != null) title = block.get(0).getHeader();
                         
-                        BufferedReader br = new BufferedReader(new FileReader(origin));
+                        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(origin), "UTF-8"));
 						if(!t.exists() || !t.isFile()) t.mkdir();
-                        PrintWriter pw = new PrintWriter(new FileWriter(new File(t.getCanonicalPath() + "/" + f.getName().replace('.', '_') + ".html")));
+                        PrintWriter pw = new PrintWriter(new OutputStreamWriter(new FileOutputStream(t.getCanonicalPath() + "/" + f.getName().replace('.', '_') + ".html"), "UTF-8"));
                         String line;
                         while((line = br.readLine()) != null){
                                 line = line.replaceAll("%TITLE%", title);
                                 if(line.contains("%CONTENT%")){
                                         //ここに本体
                                         for(DocBlock b : block){
+											pw.println("<section>");
                                                 b.getHTML(pw);
+											pw.println("</section>");
                                         }
                                 }else{
                                         pw.println(line);

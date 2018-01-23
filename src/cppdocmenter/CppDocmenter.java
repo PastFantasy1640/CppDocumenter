@@ -79,6 +79,13 @@ public class CppDocmenter {
 	}
 	
 	static public String htmlspecialchars(String src){
-		return src;
+		String outputData = src;
+
+	    outputData = outputData.replace("&", "&amp;");
+	    outputData = outputData.replace("\"", "&quot;");
+	    outputData = outputData.replace("<", "&lt;");
+	    outputData = outputData.replace(">", "&gt;");
+	    outputData = outputData.replace("'", "&#39;");
+		return outputData;
 	}
 }

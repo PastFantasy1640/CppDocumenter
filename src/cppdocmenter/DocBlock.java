@@ -50,20 +50,22 @@ public class DocBlock {
 		this.header = CppDocmenter.htmlspecialchars(header);
 	}
         
-        public String getHeader(){
-            return this.header;
-        }
+    public String getHeader(){
+        return this.header;
+    }
 	
 	public void parse(){
 		for(String line : blocks){
+			System.out.println("line : " + line);
 			String[] lines_tmp = line.split(" ", 3);
-			String[] lines = new String[3];
+			String[] lines = {"", "", ""};
 			switch(lines_tmp.length){
 				case 3: lines[2] = lines_tmp[2];
 				case 2: lines[1] = lines_tmp[1];
 				case 1: lines[0] = lines_tmp[0];
 				default:
 			}
+			System.out.println("length" + lines_tmp.length);
 			
 			switch (lines[0]) {
 				case "@author":
@@ -97,10 +99,11 @@ public class DocBlock {
 				case "@see":
 					if(this.see == null) this.see = new ArrayList<>();
 					this.see.add(new Pair(lines[1], lines[2]));
+					break;
 				default:
 					//summary
 					if(this.summary == null) this.summary = new ArrayList<>();
-					this.summary.add(lines[1] + lines[2]);
+					this.summary.add(line);
 					break;
 			}
 		}
@@ -147,7 +150,7 @@ public class DocBlock {
 			pw.println("<h2>Parameters</h2>");
 			pw.println("<table>");
 			for(Pair p : this.param) {
-				pw.println("<tr><th>" + p.head + "</th><td>" + "</td></tr>");
+				pw.println("<tr><th>" + p.head + "</th><td>" + p.body + "</td></tr>");
 			}
 			pw.println("</table>");
 			pw.println("</section>");
@@ -165,7 +168,7 @@ public class DocBlock {
 			pw.println("<h2>Throws</h2>");
 			pw.println("<table>");
 			for(Pair p : this.throws_str) {
-				pw.println("<tr><th>" + p.head + "</th><td>" + "</td></tr>");
+				pw.println("<tr><th>" + p.head + "</th><td>" + p.body + "</td></tr>");
 			}
 			pw.println("</table>");
 			pw.println("</section>");
@@ -177,7 +180,7 @@ public class DocBlock {
 			pw.println("<h2>See also</h2>");
 			for(Pair p : this.see) {
 				if(p.body.isEmpty()){
-					pw.println("<p>" + p.head + "</p");
+					pw.println("<p>" + p.head + "</p>");
 				}else{
 					pw.println("<p><a href=\"" + p.body + "\" >" + p.head + "</a></p>");
 				}
