@@ -56,7 +56,6 @@ public class DocBlock {
 	
 	public void parse(){
 		for(String line : blocks){
-			System.out.println("line : " + line);
 			String[] lines_tmp = line.split(" ", 3);
 			String[] lines = {"", "", ""};
 			switch(lines_tmp.length){
@@ -65,7 +64,6 @@ public class DocBlock {
 				case 1: lines[0] = lines_tmp[0];
 				default:
 			}
-			System.out.println("length" + lines_tmp.length);
 			
 			switch (lines[0]) {
 				case "@author":

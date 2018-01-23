@@ -20,8 +20,8 @@ public class CppDocmenter {
 	public static void main(String[] args) {
 		
 		//引数が正しいか
-		if(args.length != 3){
-			System.out.println("CppDocumenter usage : CppDocumenter [htmlfile] [fromdir] [todir]");
+		if(args.length != 4){
+			System.out.println("CppDocumenter usage : CppDocumenter [htmlfile] [fromdir] [todir] [extension,extension,...]");
 			System.exit(-1);
 			return;
 		}
@@ -30,6 +30,7 @@ public class CppDocmenter {
 		File html_file = new File(args[0]);
 		File from_dir = new File(args[1]);
 		File to_dir = new File(args[2]);
+		String[] extension = args[3].split(",");
 		if(!(from_dir.exists() && from_dir.isDirectory())){
 			//from_dirが存在しない
 			System.err.println("from_dir is not directory.");
@@ -45,9 +46,11 @@ public class CppDocmenter {
                         System.err.println("html file is not exist.");
                         System.exit(-1);
                 }
+				
+				
 		
 		//ファイルの再帰探索とファイル生成
-		Process(html_file, from_dir, to_dir);
+		Process(html_file, from_dir, to_dir, extension, 0);
 		
 	}
 	
@@ -56,7 +59,7 @@ public class CppDocmenter {
 	 * @param from_dir 探索するディレクトリ
 	 * @param to_dir 保存先のディレクトリ。存在しない場合もありうる。その時は作成する。
 	 */
-	static void Process(File html_file, File from_dir, File to_dir){
+	static void Process(File html_file, File from_dir, File to_dir, final String[] extension, int depth){
 		if(!(from_dir.exists() && from_dir.isDirectory())) return;	//存在しない
 		
 		File[] files = from_dir.listFiles();
@@ -64,8 +67,7 @@ public class CppDocmenter {
 			if(f.isDirectory()){
 				//再帰的に下に潜る
 				try{
-					System.out.println("[directory]" + new File(to_dir.getCanonicalPath() + "/" + f.getName()).getAbsolutePath());
-					Process(html_file ,f, new File(to_dir.getCanonicalPath() + "/" + f.getName()));
+					Process(html_file ,f, new File(to_dir.getCanonicalPath() + "/" + f.getName()), extension, depth+1);
 				}catch(IOException e){
 					System.err.println(e.toString());
 					System.err.println("ディレクトリはスキップされました。");
@@ -73,7 +75,15 @@ public class CppDocmenter {
 				}
 			}else if(f.isFile()){
 				//処理する
-				DocConverter.conv(html_file ,f, to_dir);
+				//拡張子チェック
+				for(String ex : extension){
+					if(f.getPath().endsWith(ex)) {
+						try {System.out.println("[PROGRESS]" + f.getCanonicalPath()); }
+						catch(IOException e){ e.printStackTrace(); }
+						DocConverter.conv(html_file ,f, to_dir, depth);
+						break;
+					}
+				}
 			}
 		}
 	}

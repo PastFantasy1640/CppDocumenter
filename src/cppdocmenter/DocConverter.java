@@ -29,11 +29,14 @@ public class DocConverter {
          * @param origin もとになるhtmlファイル
          * @param f 変換前のヘッダファイル
          * @param t 変換後の保存先
+		 * @param depth 階層の深さ
          */
-	public static void conv(File origin, File f, File t){
+	public static void conv(File origin, File f, File t, int depth){
 		//ファイルの読み込み
                 //origin
 				String current_acc = "";
+				String dir_depth = "";
+				for(int i = 0; i < depth; i++) dir_depth += "../";
                 try{
                         BufferedReader src =  new BufferedReader(new InputStreamReader(new FileInputStream(f), "Shift-JIS"));
                         //parse
@@ -51,6 +54,8 @@ public class DocConverter {
 									printContent(pw, block);
                                 }else if(line.contains("%INDEX%")){
 									printIndex(pw, block);
+								}else if(line.contains("%LINKDIR%")){
+									pw.println(line.replaceAll("%LINKDIR%", dir_depth));
 								}else{
 									pw.println(line);
                                 }
@@ -74,8 +79,8 @@ public class DocConverter {
 	static void printContent(PrintWriter pw, List<DocBlock> block){
 		//ここに本体
 		String current_acc = "";
+		int i = 0;
 		for(DocBlock b : block){
-			System.out.println("block ac ->" + b.accessbility + " current -> " + current_acc);
 			if(!current_acc.equals(b.accessbility)){
 				if(!current_acc.isEmpty()){
 					//一回閉じる
@@ -86,8 +91,10 @@ public class DocConverter {
 				current_acc = b.accessbility;
 			}
 			pw.println("<section>");
+			pw.println("<a name=\"a" + i + "\"></a>");
 			b.getHTML(pw);
 			pw.println("</section>");
+			i++;
 		}
 	}
 	
@@ -95,18 +102,22 @@ public class DocConverter {
 		
 		String current_acc = "";
 		pw.println("<section class=\"index\">");
+		pw.println("<section class=\"noacc\">");
+		pw.println("<h1>Unleveled</h1>");
+		pw.println("<ul>");
+		
+		int i = 0;
 		for(DocBlock b : block){
 			if(!current_acc.equals(b.accessbility)){
-				if(!current_acc.isEmpty()){
-					pw.println("</ul>");
-					pw.println("</section>");
-				}
+				pw.println("</ul>");
+				pw.println("</section>");
 				pw.println("<section class=\"" + b.accessbility + "\">");
-				pw.println("<h1>" + b.accessbility + "</h1>");
+				pw.println("<h1>" + toUpper(b.accessbility) + "</h1>");	//toUpperCase
 				pw.println("<ul>");
 			}
-			pw.println("<li>" + b.getHeader() + "</li>");
+			pw.println("<li><a href=\"#a" + i + "\">" + b.getHeader() + "</a></li>");
 			current_acc = b.accessbility;
+			i++;
 		}
 		
 		if(!current_acc.isEmpty()){
@@ -116,6 +127,14 @@ public class DocConverter {
 		pw.println("</section>");
 	}
 
+	static String toUpper(String str){
+		if(str.isEmpty()) return str;
+		String ret;
+		ret = str.substring(0, 1).toUpperCase();
+		if(str.length() >= 2) ret += str.substring(1).toLowerCase();
+		return ret;
+	}
+	
 	static List<DocBlock> parse(BufferedReader lines) throws IOException{
 		//改行分離
                 
@@ -155,7 +174,6 @@ public class DocConverter {
 					String str = comment[1].trim();
 					if(!str.isEmpty()){
 						if(now_block == null) {
-							System.out.println(accessibility);
 							now_block = new DocBlock(accessibility);
 						}
 						now_block.addLine(str);
@@ -165,7 +183,6 @@ public class DocConverter {
 		}
 		
 		//意味づけ
-		System.out.println("Size" + block.size());
 		for(DocBlock d : block) d.parse();
 		
 		//並び替え
