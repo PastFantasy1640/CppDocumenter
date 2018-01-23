@@ -10,8 +10,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
@@ -35,6 +33,7 @@ public class DocConverter {
 	public static void conv(File origin, File f, File t){
 		//ファイルの読み込み
                 //origin
+				String current_acc = "";
                 try{
                         BufferedReader src =  new BufferedReader(new InputStreamReader(new FileInputStream(f), "Shift-JIS"));
                         //parse
@@ -49,17 +48,19 @@ public class DocConverter {
                         while((line = br.readLine()) != null){
                                 line = line.replaceAll("%TITLE%", title);
                                 if(line.contains("%CONTENT%")){
-                                        //ここに本体
-                                        for(DocBlock b : block){
-											pw.println("<section>");
-                                                b.getHTML(pw);
-											pw.println("</section>");
-                                        }
-                                }else{
-                                        pw.println(line);
+									printContent(pw, block);
+                                }else if(line.contains("%INDEX%")){
+									printIndex(pw, block);
+								}else{
+									pw.println(line);
                                 }
                         }
                         
+						//acc閉じる
+						if(!current_acc.isEmpty()){
+							pw.println("</section>");
+						}
+						
                         br.close();
                         src.close();
                         pw.close();
@@ -69,12 +70,57 @@ public class DocConverter {
                     e.printStackTrace();
                 }
         }
+	
+	static void printContent(PrintWriter pw, List<DocBlock> block){
+		//ここに本体
+		String current_acc = "";
+		for(DocBlock b : block){
+			System.out.println("block ac ->" + b.accessbility + " current -> " + current_acc);
+			if(!current_acc.equals(b.accessbility)){
+				if(!current_acc.isEmpty()){
+					//一回閉じる
+					pw.println("</section>");
+				}
+				pw.println("<section class=\"" + b.accessbility + "\">");
+				pw.println("<h1 class=\"acc\">" + b.accessbility + " Members" + "</h1>");
+				current_acc = b.accessbility;
+			}
+			pw.println("<section>");
+			b.getHTML(pw);
+			pw.println("</section>");
+		}
+	}
+	
+	static void printIndex(PrintWriter pw, List<DocBlock> block){
+		
+		String current_acc = "";
+		pw.println("<section class=\"index\">");
+		for(DocBlock b : block){
+			if(!current_acc.equals(b.accessbility)){
+				if(!current_acc.isEmpty()){
+					pw.println("</ul>");
+					pw.println("</section>");
+				}
+				pw.println("<section class=\"" + b.accessbility + "\">");
+				pw.println("<h1>" + b.accessbility + "</h1>");
+				pw.println("<ul>");
+			}
+			pw.println("<li>" + b.getHeader() + "</li>");
+			current_acc = b.accessbility;
+		}
+		
+		if(!current_acc.isEmpty()){
+			pw.println("</ul>");
+			pw.println("</section>");
+		}
+		pw.println("</section>");
+	}
 
 	static List<DocBlock> parse(BufferedReader lines) throws IOException{
 		//改行分離
                 
 		//ブロックごとに分離	
-		String accessibility = "private";
+		String accessibility = "";
 		boolean block_nextline = false;
 		boolean block_open = false;
 		List<DocBlock> block = new ArrayList<>();
@@ -84,18 +130,18 @@ public class DocConverter {
 		while((line = lines.readLine()) != null){
             line = line.trim();
 			if(line.isEmpty()) continue;
-			if(line.length() >= 8 && line.substring(0, 8).equals("private:")) accessibility = "private";
-			else if(line.length() >= 7 && line.substring(0, 7).equals("public:")) accessibility = "public";
-			else if(line.length() >= 10 && line.substring(0, 10).equals("protected:")) accessibility = "protected";
-			else if(line.length() >= 3 && line.substring(0, 3).equals("/**")) block_open = true;
-			else if(line.length() >= 2 && line.substring(0, 2).equals("*/")) {
+			else if(line.contains("private:")) accessibility = "private";
+			else if(line.contains("public:")) accessibility = "public";
+			else if(line.contains("protected:")) accessibility = "protected";
+			else if(line.contains("/**")) block_open = true;
+			else if(line.contains("*/")) {
 				block_open = false;
 				block_nextline = true;
 			}else if(block_nextline) {
 			
 				if(line.endsWith("{")) line = line.substring(0, line.length() - 1);
 				block_nextline = false;		
-				String obj = line.replaceAll(";", "");	
+				String obj = line.replaceAll(";", "");
 				if(now_block != null){
 					now_block.addHeader(obj);
 					block.add(now_block);
@@ -108,7 +154,10 @@ public class DocConverter {
 				if(comment.length == 2){
 					String str = comment[1].trim();
 					if(!str.isEmpty()){
-						if(now_block == null) now_block = new DocBlock(accessibility);
+						if(now_block == null) {
+							System.out.println(accessibility);
+							now_block = new DocBlock(accessibility);
+						}
 						now_block.addLine(str);
 					}
 				}

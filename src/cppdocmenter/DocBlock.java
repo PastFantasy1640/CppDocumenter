@@ -23,7 +23,7 @@ public class DocBlock {
 		}
 	}
 	
-	private final String accessbility;
+	public final String accessbility;
 	private final List<String> blocks;
 	private String header;
 	private List<String> author;
@@ -38,7 +38,7 @@ public class DocBlock {
 	
 	
 	public DocBlock(String accessbility_){
-		accessbility = accessbility_;
+		this.accessbility = accessbility_;
 		blocks = new ArrayList<>();
 	}
 	
