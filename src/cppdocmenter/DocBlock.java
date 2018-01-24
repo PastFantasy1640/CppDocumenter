@@ -144,7 +144,7 @@ public class DocBlock {
 		}
 		
 		if(this.param != null){
-			pw.println("<section class=\"author\">");
+			pw.println("<section class=\"param\">");
 			pw.println("<h2>Parameters</h2>");
 			pw.println("<table>");
 			for(Pair p : this.param) {
